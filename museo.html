@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casa Simón I. Patiño – Museo Histórico</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:#080500; font-family:'Georgia',serif; width:100vw; height:100vh; }
+
+/* ══ VISTAS ══ */
+#view-lobby  { position:absolute; inset:0; z-index:1; display:block; }
+#view-museo  { position:absolute; inset:0; z-index:1; display:none; background:#0a0806; }
+
+/* ══ TRANSICIÓN ══ */
+#curtain {
+  position:fixed; inset:0; z-index:200;
+  background:#080500;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.6s;
+}
+#curtain.fade-in  { opacity:1; pointer-events:all; }
+#curtain.fade-out { opacity:0; pointer-events:none; }
+
+/* ══════════════════════════════════════
+   LOBBY — PANTALLA DE CARGA AUTOMÁTICA
+══════════════════════════════════════ */
+#loading {
+  position:absolute; inset:0; background:#080500;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:60;
+}
+.load-title    { font-size:22px; color:#c9a84c; letter-spacing:8px; text-transform:uppercase; margin-bottom:8px; }
+.load-sub-txt  { font-size:11px; color:#555; letter-spacing:3px; margin-bottom:24px; }
+.load-bar-bg   { width:240px; height:2px; background:rgba(201,168,76,0.2); }
+.load-bar      { height:2px; background:#c9a84c; width:0%; transition:width 0.15s; }
+.load-status   { font-size:11px; color:#555; letter-spacing:2px; margin-top:12px; }
+.load-error    { font-size:11px; color:#c95d4c; letter-spacing:1px; margin-top:18px; max-width:420px; text-align:center; line-height:1.6; display:none; }
+.load-retry     { margin-top:16px; background:transparent; border:1px solid #c9a84c; color:#c9a84c; padding:8px 18px; font-size:11px; letter-spacing:2px; cursor:pointer; display:none; font-family:'Georgia',serif; }
+
+#logo { position:absolute; top:28px; left:40px; display:flex; align-items:center; gap:14px; pointer-events:all; z-index:5; }
+#logo-icon { width:56px; height:56px; border:1.5px solid #c9a84c; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); }
+#logo-text .top  { font-size:11px; color:#c9a84c; letter-spacing:3px; text-transform:uppercase; }
+#logo-text .main { font-size:20px; color:#f0dfa8; font-weight:bold; letter-spacing:1px; text-shadow:1px 1px 6px #000; }
+#logo-text .sub  { font-size:10px; color:#c9a84c; letter-spacing:5px; text-transform:uppercase; margin-top:2px; }
+.gold-line { display:block; width:60px; height:1px; background:linear-gradient(90deg,transparent,#c9a84c,transparent); margin:3px 0; }
+
+#left-grad   { position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(90deg,rgba(5,3,0,0.82) 0%,rgba(5,3,0,0.45) 38%,transparent 68%); }
+#bottom-grad { position:absolute; bottom:0; left:0; right:0; height:240px; z-index:1; pointer-events:none; background:linear-gradient(to top,rgba(5,3,0,0.92) 0%,transparent 100%); }
+
+#left-content { position:absolute; left:40px; bottom:160px; pointer-events:all; max-width:390px; z-index:3; }
+.welcome-script  { font-size:22px; color:#e8d5a3; font-style:italic; text-shadow:1px 2px 10px #000; margin-bottom:4px; }
+.museum-title    { font-size:62px; color:#fff; font-weight:bold; line-height:1; text-shadow:2px 3px 14px rgba(0,0,0,0.95); letter-spacing:1px; }
+.location-line   { margin-top:10px; display:flex; align-items:center; gap:8px; }
+.location-text   { font-size:13px; color:#c9a84c; letter-spacing:4px; text-transform:uppercase; text-shadow:1px 1px 4px #000; }
+.dot             { width:4px; height:4px; background:#c9a84c; border-radius:50%; flex-shrink:0; }
+.desc-text       { margin-top:18px; font-size:14.5px; color:#e0d8cc; line-height:1.65; text-shadow:1px 1px 8px #000; max-width:340px; }
+
+#explore-btn {
+  margin-top:24px; display:inline-flex; align-items:center; gap:12px;
+  background:rgba(0,0,0,0.35); border:1.5px solid #c9a84c; backdrop-filter:blur(6px);
+  color:#e8d5a3; padding:12px 28px; font-size:13px; letter-spacing:3px;
+  text-transform:uppercase; cursor:pointer; transition:all 0.35s; font-family:'Georgia',serif;
+}
+#explore-btn:hover { background:rgba(201,168,76,0.18); box-shadow:0 0 24px rgba(201,168,76,0.4); }
+
+#right-nav { position:absolute; right:28px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:9px; pointer-events:all; z-index:3; }
+.nav-item { display:flex; align-items:center; gap:12px; background:rgba(8,5,2,0.68); border:0.5px solid rgba(201,168,76,0.38); padding:10px 16px; min-width:205px; cursor:pointer; transition:all 0.3s; backdrop-filter:blur(8px); }
+.nav-item:hover { background:rgba(201,168,76,0.14); border-color:#c9a84c; transform:translateX(-3px); }
+.nav-icon { width:36px; height:36px; border:1px solid rgba(201,168,76,0.5); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.nav-icon svg { width:18px; height:18px; stroke:#c9a84c; fill:none; stroke-width:1.5; }
+.n-title { font-size:13px; color:#f0dfa8; font-weight:bold; letter-spacing:1px; text-transform:uppercase; }
+.n-sub   { font-size:11px; color:#999; margin-top:1px; }
+
+#bottom-bar { position:absolute; bottom:0; left:0; right:0; background:rgba(4,3,1,0.88); border-top:0.5px solid rgba(201,168,76,0.35); display:flex; align-items:stretch; backdrop-filter:blur(8px); z-index:4; }
+.bottom-item { flex:1; display:flex; align-items:center; gap:14px; padding:16px 24px; border-right:0.5px solid rgba(201,168,76,0.2); cursor:pointer; transition:background 0.3s; }
+.bottom-item:last-child { border-right:none; }
+.bottom-item:hover { background:rgba(201,168,76,0.09); }
+.bottom-item svg { width:26px; height:26px; stroke:#c9a84c; fill:none; stroke-width:1.5; flex-shrink:0; }
+.b-title { font-size:12px; color:#f0dfa8; font-weight:bold; letter-spacing:2px; text-transform:uppercase; }
+.b-sub   { font-size:11px; color:#888; margin-top:2px; }
+
+#footer-credit { position:absolute; bottom:70px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; white-space:nowrap; z-index:3; }
+.credit-top    { font-size:10px; color:#777; letter-spacing:4px; text-transform:uppercase; }
+.credit-bottom { font-size:13px; color:#c9a84c; letter-spacing:2px; margin-top:3px; display:flex; align-items:center; gap:8px; justify-content:center; }
+.diamond { width:6px; height:6px; background:#c9a84c; transform:rotate(45deg); }
+
+/* ══════════════════════════════════════
+   MUSEO INTERIOR
+══════════════════════════════════════ */
+#museum-hud {
+  position:absolute; top:0; left:0; right:0;
+  pointer-events:none; z-index:10;
+}
+#museum-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 32px;
+  background:linear-gradient(180deg,rgba(13,13,13,0.95) 0%,transparent 100%);
+}
+.m-logo h1 { font-size:1.35rem; letter-spacing:0.08em; color:#C9A84C; }
+.m-logo p  { font-size:0.68rem; letter-spacing:0.25em; text-transform:uppercase; color:rgba(240,234,214,0.5); margin-top:2px; }
+
+.floor-indicator { display:flex; gap:8px; pointer-events:all; }
+.floor-btn {
+  background:transparent; border:1px solid rgba(201,168,76,0.35);
+  color:rgba(201,168,76,0.6); font-family:'Georgia',serif; font-size:0.7rem;
+  letter-spacing:0.18em; text-transform:uppercase; padding:7px 18px; cursor:pointer; transition:all 0.3s;
+}
+.floor-btn.active,.floor-btn:hover { background:rgba(201,168,76,0.15); border-color:#C9A84C; color:#C9A84C; }
+
+/* Botón volver al lobby */
+#btn-volver {
+  position:absolute; top:18px; right:32px; z-index:20; pointer-events:all;
+  background:rgba(13,13,13,0.8); border:1px solid rgba(201,168,76,0.4);
+  color:#C9A84C; font-family:'Georgia',serif; font-size:0.68rem; letter-spacing:0.2em;
+  text-transform:uppercase; padding:8px 18px; cursor:pointer; transition:all 0.3s;
+}
+#btn-volver:hover { background:rgba(201,168,76,0.15); border-color:#C9A84C; }
+
+#museum-controls {
+  position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
+  display:flex; gap:10px; pointer-events:all; z-index:10;
+}
+.ctrl-btn {
+  background:rgba(13,13,13,0.8); border:1px solid rgba(201,168,76,0.3); color:#C9A84C;
+  width:44px; height:44px; border-radius:4px; font-size:1.1rem; cursor:pointer;
+  transition:all 0.25s; display:flex; align-items:center; justify-content:center; font-family:'Georgia',serif;
+}
+.ctrl-btn:hover { background:rgba(201,168,76,0.18); border-color:#C9A84C; }
+.ctrl-label { color:rgba(240,234,214,0.35); font-size:0.6rem; letter-spacing:0.15em; text-align:center; margin-top:4px; pointer-events:none; }
+.ctrl-group { display:flex; flex-direction:column; align-items:center; }
+
+#info-panel {
+  position:absolute; right:0; top:0; bottom:0; width:320px;
+  background:rgba(13,13,13,0.92); border-left:1px solid rgba(201,168,76,0.18);
+  overflow-y:auto; transform:translateX(100%); transition:transform 0.4s cubic-bezier(0.25,0.8,0.25,1);
+  z-index:20;
+}
+#info-panel.open { transform:translateX(0); }
+.panel-header { padding:28px 24px 20px; border-bottom:1px solid rgba(201,168,76,0.15); position:sticky; top:0; background:rgba(13,13,13,0.92); }
+.panel-header .tag { font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:#C9A84C; margin-bottom:8px; }
+.panel-header h2 { font-size:1.45rem; line-height:1.3; color:#F0EAD6; }
+.panel-body { padding:24px; }
+.panel-body p { font-size:0.82rem; line-height:1.75; color:rgba(240,234,214,0.75); margin-bottom:16px; }
+.panel-body .detail-item { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid rgba(201,168,76,0.1); }
+.detail-item .detail-label { font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:#C9A84C; min-width:80px; padding-top:1px; }
+.detail-item .detail-val   { font-size:0.8rem; color:#F0EAD6; line-height:1.5; }
+.panel-img-placeholder { width:100%; aspect-ratio:4/3; background:linear-gradient(135deg,rgba(44,24,16,0.6) 0%,rgba(107,30,46,0.3) 100%); border:1px solid rgba(201,168,76,0.2); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; margin-bottom:20px; }
+.panel-img-placeholder .icon      { font-size:2.5rem; opacity:0.35; }
+.panel-img-placeholder .img-label { font-size:0.65rem; letter-spacing:0.18em; color:rgba(201,168,76,0.4); text-transform:uppercase; }
+#close-panel { position:absolute; top:16px; right:16px; background:transparent; border:none; color:rgba(201,168,76,0.5); font-size:1.2rem; cursor:pointer; padding:4px 8px; transition:color 0.2s; z-index:25; }
+#close-panel:hover { color:#C9A84C; }
+
+#tooltip {
+  position:fixed; background:rgba(13,13,13,0.92); border:1px solid rgba(201,168,76,0.4);
+  color:#F0EAD6; padding:8px 14px; font-size:0.75rem; letter-spacing:0.05em;
+  pointer-events:none; z-index:999; display:none; backdrop-filter:blur(4px);
+}
+#tooltip .tt-name { color:#C9A84C; display:block; margin-bottom:2px; font-size:0.85rem; }
+
+#museum-legend { position:absolute; left:24px; bottom:90px; z-index:10; pointer-events:none; }
+.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.legend-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.legend-text { font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(240,234,214,0.45); }
+
+#info-panel::-webkit-scrollbar { width:4px; }
+#info-panel::-webkit-scrollbar-track { background:transparent; }
+#info-panel::-webkit-scrollbar-thumb { background:rgba(201,168,76,0.3); border-radius:2px; }
+
+/* ═══════════════════════════════
+   MODAL HISTORIA SIMÓN I. PATIÑO
+═══════════════════════════════ */
+
+#history-modal{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(8px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: all 0.4s ease;
+    z-index: 9999;
+}
+
+#history-modal.show{
+    opacity: 1;
+    visibility: visible;
+}
+
+.history-content{
+    position: relative;
+
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+
+    overflow-y: auto;
+
+    padding: 40px;
+
+    border-radius: 18px;
+
+    background: linear-gradient(
+        135deg,
+        rgba(15, 10, 5, 0.98),
+        rgba(25, 18, 8, 0.98)
+    );
+
+    border: 1px solid rgba(201, 168, 76, 0.6);
+
+    box-shadow:
+        0 0 40px rgba(201, 168, 76, 0.25),
+        inset 0 0 20px rgba(201, 168, 76, 0.08);
+
+    color: #f5f1e6;
+
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.4s ease;
+}
+
+#history-modal.show .history-content{
+    transform: translateY(0) scale(1);
+}
+
+
+
+.history-content p{
+    line-height: 1.8;
+    margin-bottom: 18px;
+    text-align: justify;
+    color: #e8e1cf;
+}
+
+#close-history{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+
+    width: 42px;
+    height: 42px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(201, 168, 76, 0.15);
+    color: #c9a84c;
+
+    font-size: 18px;
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+}
+
+#close-history:hover{
+    background: #c9a84c;
+    color: #111;
+    transform: rotate(90deg);
+}
+
+.history-content::-webkit-scrollbar{
+    width: 8px;
+}
+
+.history-content::-webkit-scrollbar-track{
+    background: rgba(255,255,255,0.05);
+}
+
+.history-content::-webkit-scrollbar-thumb{
+    background: rgba(201,168,76,0.5);
+    border-radius: 10px;
+}
+
+@media (max-width: 768px){
+
+    .history-content{
+        width: 95%;
+        padding: 25px;
+    }
+
+    .history-content h2{
+        font-size: 1.5rem;
+    }
+
+    .history-content p{
+        font-size: 14px;
+    }
+
+}
+/* ==========================================
+   ARTÍCULO HISTÓRICO - MUSEO SIMÓN I. PATIÑO
+========================================== */
+
+.article-title{
+    text-align:center;
+    color:#c9a84c;
+    font-size:2.2rem;
+    margin-bottom:25px;
+    font-weight:bold;
+    text-shadow:0 0 10px rgba(201,168,76,0.3);
+}
+
+.article-intro{
+    font-size:1.05rem;
+    line-height:1.9;
+    color:#e8e1cf;
+    text-align:justify;
+    margin-bottom:25px;
+}
+
+.article-hero{
+    width:100%;
+    max-height:450px;
+    object-fit:cover;
+    border-radius:15px;
+    margin-bottom:25px;
+    border:2px solid rgba(201,168,76,0.4);
+    box-shadow:0 0 20px rgba(201,168,76,0.2);
+}
+
+.article-image{
+    width:100%;
+    border-radius:12px;
+    margin:25px 0;
+    border:1px solid rgba(201,168,76,0.3);
+}
+
+.history-content h2{
+    color:#c9a84c;
+    margin-top:30px;
+    margin-bottom:15px;
+    font-size:1.6rem;
+    border-left:4px solid #c9a84c;
+    padding-left:12px;
+    text-align:left;
+}
+
+.history-content p{
+    color:#e8e1cf;
+    line-height:1.8;
+    text-align:justify;
+}
+
+/* ==========================================
+   GALERÍA HISTÓRICA
+========================================== */
+
+.gallery-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin:25px 0;
+}
+
+.gallery-grid img{
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    border-radius:10px;
+    cursor:pointer;
+    border:2px solid rgba(201,168,76,0.25);
+    transition:all .3s ease;
+}
+
+.gallery-grid img:hover{
+    transform:scale(1.04);
+    border-color:#c9a84c;
+    box-shadow:0 0 15px rgba(201,168,76,0.35);
+}
+
+/* ==========================================
+   DATOS DESTACADOS
+========================================== */
+
+.facts-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin:25px 0;
+}
+
+.fact-card{
+    background:rgba(201,168,76,0.08);
+    border:1px solid rgba(201,168,76,0.25);
+    border-radius:12px;
+    padding:18px;
+    transition:all .3s ease;
+}
+
+.fact-card:hover{
+    transform:translateY(-5px);
+    border-color:#c9a84c;
+    box-shadow:0 0 15px rgba(201,168,76,0.25);
+}
+
+.fact-card h3{
+    color:#c9a84c;
+    margin-bottom:10px;
+    font-size:1rem;
+}
+
+.fact-card p{
+    margin:0;
+    color:#f1ead7;
+    font-size:0.95rem;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width:768px){
+
+    .article-title{
+        font-size:1.7rem;
+    }
+
+    .gallery-grid{
+        grid-template-columns:1fr;
+    }
+
+    .facts-container{
+        grid-template-columns:1fr;
+    }
+
+    .gallery-grid img{
+        height:220px;
+    }
+
+}
+.article-hero:hover,
+.article-image:hover{
+    transform:scale(1.02);
+    transition:0.4s;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ CORTINA DE TRANSICIÓN ═══ -->
+<div id="curtain"></div>
+
+<!-- ══════════════════════════════════════════════
+     VISTA 1 — LOBBY
+══════════════════════════════════════════════ -->
+<div id="view-lobby">
+
+  <!-- Pantalla de carga automática (sustituye al panel de subida manual) -->
+  <div id="loading">
+    <div class="load-title">Casa Simón I. Patiño</div>
+    <div class="load-sub-txt">Cargando experiencia 3D...</div>
+    <div class="load-bar-bg"><div class="load-bar" id="load-bar"></div></div>
+    <div class="load-status" id="load-status">Iniciando...</div>
+    <div class="load-error" id="load-error"></div>
+    <button class="load-retry" id="load-retry">Reintentar</button>
+  </div>
+
+  <!-- Canvas lobby -->
+  <canvas id="lobby-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+  <canvas id="lobby-particles" style="position:absolute;inset:0;z-index:2;pointer-events:none;"></canvas>
+  <div id="left-grad"></div>
+  <div id="bottom-grad"></div>
+
+  <!-- HUD Lobby -->
+  <div style="position:absolute;inset:0;z-index:3;pointer-events:none;">
+    <div id="logo">
+      <div id="logo-icon">
+        <svg viewBox="0 0 36 36" fill="none" stroke="#c9a84c" stroke-width="1.2" width="36" height="36">
+          <rect x="4" y="14" width="28" height="18" rx="1"/><rect x="8" y="8" width="20" height="8" rx="1"/>
+          <rect x="13" y="3" width="10" height="6" rx="1"/>
+          <line x1="4" y1="14" x2="18" y2="5"/><line x1="32" y1="14" x2="18" y2="5"/>
+          <rect x="9" y="18" width="5" height="5"/><rect x="16" y="18" width="5" height="5"/>
+          <rect x="23" y="18" width="4" height="5"/><rect x="14" y="24" width="8" height="8"/>
+        </svg>
+      </div>
+      <div id="logo-text">
+        <div class="top">Casa</div>
+        <div class="main">Simón I. Patiño</div>
+        <span class="gold-line"></span>
+        <div class="sub">Museo Histórico</div>
+      </div>
+    </div>
+
+    <div id="left-content">
+      <div class="welcome-script">Bienvenido a la</div>
+      <div class="museum-title">CASA<br>SIMÓN I.<br>PATIÑO</div>    
+      <div class="location-line">
+        <span class="location-text">Bolivia</span><span class="dot"></span>
+        <span class="location-text">Potosí</span><span class="dot"></span>
+        <span class="location-text">Uncía</span>
+      </div>
+      <p class="desc-text">Descubre la historia, el patrimonio y el legado de una de las residencias más emblemáticas de Bolivia.</p>
+      <button id="explore-btn" style="pointer-events:all;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.5" width="20" height="20">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
+        </svg>
+        Explorar Museo 3D
+      </button>
+    </div>
+
+    <div id="right-nav">
+      <div class="nav-item" id="btn-history"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div><div><div class="n-title">Historia</div><div class="n-sub">Conoce nuestro legado</div></div></div>
+      <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg></div><div><div class="n-title">Galería</div><div class="n-sub">Imágenes históricas</div></div></div>
+      <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg></div><div><div class="n-title">Entradas</div><div class="n-sub">Precios y boletos</div></div></div>
+      <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div><div><div class="n-title">Horarios</div><div class="n-sub">Días y horarios</div></div></div>
+      <div class="nav-item" id="nav-recorrido" style="pointer-events:all;border-color:rgba(201,168,76,0.7);">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+        <div><div class="n-title" style="color:#c9a84c;">Recorrido 3D</div><div class="n-sub">Entrar al museo →</div></div>
+      </div>
+    </div>
+
+    <div id="footer-credit">
+      <div class="credit-top">Hecho por</div>
+      <div class="credit-bottom"><span class="diamond"></span>Univ: Adolfo Mena Velasquez<span class="diamond"></span></div>
+    </div>
+  </div>
+
+  <div id="bottom-bar">
+    <div class="bottom-item"><svg viewBox="0 0 24 24"><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><path d="M18 3l3 6-3 6M6 3L3 9l3 6M3 3h18M3 21h18"/></svg><div><div class="b-title">Patrimonio Histórico</div><div class="b-sub">Preservamos nuestra historia</div></div></div>
+    <div class="bottom-item"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"/></svg><div><div class="b-title">Experiencia Única</div><div class="b-sub">Cultura, arte y tradición</div></div></div>
+    <div class="bottom-item"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><div class="b-title">Legado Patiño</div><div class="b-sub">Historia que inspira</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     VISTA 2 — MUSEO INTERIOR
+══════════════════════════════════════════════ -->
+<div id="view-museo">
+  <canvas id="museum-canvas" style="display:block;position:absolute;inset:0;z-index:1;"></canvas>
+
+  <!-- HUD Museo -->
+  <div id="museum-hud">
+    <div id="museum-header">
+      <div class="m-logo">
+        <h1>Casa Patiño</h1>
+        <p>Museo Virtual · Llallagua</p>
+      </div>
+      <div class="floor-indicator">
+        <button class="floor-btn active" onclick="goToFloor(0)">Planta Baja</button>
+        <button class="floor-btn" onclick="goToFloor(1)">Segundo Nivel</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="btn-volver">← Volver al Lobby</button>
+
+  <!-- Panel lateral -->
+  <div id="info-panel">
+    <button id="close-panel" onclick="closePanel()">✕</button>
+    <div class="panel-header">
+      <div class="tag" id="panel-tag">Sala</div>
+      <h2 id="panel-title">—</h2>
+    </div>
+    <div class="panel-body">
+      <div class="panel-img-placeholder" id="panel-img-wrap">
+        <span class="icon">🏛</span>
+        <span class="img-label">Imagen ilustrativa</span>
+      </div>
+      <p id="panel-desc">—</p>
+      <div id="panel-details"></div>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div id="tooltip">
+    <span class="tt-name" id="tt-name"></span>
+    <span id="tt-hint">Clic para más información</span>
+  </div>
+
+  <!-- Controles -->
+  <div id="museum-controls">
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="btn-left">◀</button>
+      <span class="ctrl-label">IZQ</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="ctrl-group">
+        <button class="ctrl-btn" id="btn-forward">▲</button>
+        <span class="ctrl-label">AVANZAR</span>
+      </div>
+      <div class="ctrl-group">
+        <button class="ctrl-btn" id="btn-back">▼</button>
+        <span class="ctrl-label">RETROCEDER</span>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="btn-right">▶</button>
+      <span class="ctrl-label">DER</span>
+    </div>
+  </div>
+
+  <!-- Leyenda -->
+  <div id="museum-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#C9A84C"></div><span class="legend-text">Sala interactiva</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6B1E2E"></div><span class="legend-text">Área histórica</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4A7C4F"></div><span class="legend-text">Galería de arte</span></div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIA -->
+
+<div id="history-modal">
+
+  <div class="history-content">
+
+<button id="close-history">✕</button>
+
+<h1 class="article-title">La Casa de Simón I. Patiño en Uncía</h1>
+
+<img src="imagenes/casa-patino-uncia.png"
+     alt="Casa de Simón I. Patiño en Uncía"
+     class="article-hero"
+     onerror="this.style.display='none'; console.warn('No se encontró imagenes/casa-patino-uncia.png');">
+
+<p class="article-intro">
+  La Casa de Simón I. Patiño en Uncía constituye uno de los patrimonios históricos más importantes del norte de Potosí. Este edificio estuvo estrechamente relacionado con la administración de las actividades mineras que impulsaron el crecimiento económico de Uncía y Llallagua durante el auge de la industria del estaño en Bolivia.
+</p>
+
+<h2>Historia de la Casa</h2>
+
+<p>
+  Durante la expansión de sus operaciones mineras, Simón I. Patiño estableció centros administrativos y residencias vinculadas a la gestión de sus empresas. La casa ubicada en Uncía se convirtió en un importante punto de administración y coordinación de las actividades mineras que impulsaron el desarrollo de toda la región.
+</p>
+
+<img src="imagenes/uncia-historica.png"
+     alt="Uncía histórica"
+     class="article-image"
+     onerror="this.style.display='none';">
+
+<h2>Relación con Llallagua</h2>
+
+<p>
+  La historia de esta casa está estrechamente relacionada con la mina La Salvadora y con el crecimiento de Llallagua como uno de los centros mineros más importantes de Bolivia. Desde esta región se impulsó gran parte de la producción de estaño que convirtió a Simón I. Patiño en una figura reconocida a nivel mundial.
+</p>
+
+<h2>Galería Histórica</h2>
+
+<p>
+  Las siguientes imágenes muestran parte del patrimonio histórico relacionado con Simón I. Patiño, la actividad minera y el desarrollo de Uncía y Llallagua.
+</p>
+
+<div class="gallery-grid">
+
+  <img src="imagenes/casa1.png" alt="Casa de Patiño" onerror="this.style.display='none';">
+  <img src="imagenes/casa2.png" alt="Patrimonio histórico" onerror="this.style.display='none';">
+  <img src="imagenes/casa3.png" alt="Uncía antigua" onerror="this.style.display='none';">
+  <img src="imagenes/casa4.png" alt="Historia minera" onerror="this.style.display='none';">
+
+
+  </div>
+  </div>
+</div>
+
+<!-- ═══ THREE.JS (una sola carga) ═══ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONFIGURACIÓN — RUTA DEL MODELO 3D AUTOMÁTICO
+   ════════════════════════════════════════════════════════════
+   Coloca tu archivo .glb en una carpeta "modelos" junto a este
+   HTML, con exactamente este nombre: modelos/casa_patino.glb
+
+   IMPORTANTE: por restricciones de seguridad del navegador,
+   la carga automática (fetch) NO funciona si abres este HTML
+   con doble clic (file://). Debes usar un servidor local, p.ej.:
+     python3 -m http.server 8000
+   y luego abrir http://localhost:8000 en el navegador.
+════════════════════════════════════════════════════════════ */
+const MODEL_PATH = 'modelos/casa_patino.glb';
+
+/* ════════════════════════════════════════════════════════════
+   ESTADO GLOBAL
+════════════════════════════════════════════════════════════ */
+let currentView = 'lobby';  // 'lobby' | 'museo'
+let lobbyLoopRunning = false;
+let museumLoopRunning = false;
+
+/* ════════════════════════════════════════════════════════════
+   TRANSICIÓN ENTRE VISTAS
+════════════════════════════════════════════════════════════ */
+const curtain = document.getElementById('curtain');
+
+function switchToMuseo() {
+  if (currentView === 'museo') return;
+  curtain.classList.add('fade-in');
+  setTimeout(() => {
+    document.getElementById('view-lobby').style.display = 'none';
+    document.getElementById('view-museo').style.display = 'block';
+    currentView = 'museo';
+    initMuseumIfNeeded();
+    curtain.classList.remove('fade-in');
+    curtain.classList.add('fade-out');
+    setTimeout(() => curtain.classList.remove('fade-out'), 700);
+  }, 600);
+}
+
+function switchToLobby() {
+  if (currentView === 'lobby') return;
+  curtain.classList.add('fade-in');
+  setTimeout(() => {
+    document.getElementById('view-museo').style.display = 'none';
+    document.getElementById('view-lobby').style.display = 'block';
+    currentView = 'lobby';
+    curtain.classList.remove('fade-in');
+    curtain.classList.add('fade-out');
+    setTimeout(() => curtain.classList.remove('fade-out'), 700);
+  }, 600);
+}
+
+/* ════════════════════════════════════════════════════════════
+   LOBBY — THREE.JS
+════════════════════════════════════════════════════════════ */
+const lobbyAPI = (function initLobby() {
+  const W = window.innerWidth, H = window.innerHeight;
+  const lCanvas = document.getElementById('lobby-canvas');
+  lCanvas.width = W; lCanvas.height = H;
+
+  const lRenderer = new THREE.WebGLRenderer({ canvas: lCanvas, antialias: true, alpha: false });
+  lRenderer.setSize(W, H);
+  lRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  lRenderer.setClearColor(0x0d0804, 1);
+  lRenderer.shadowMap.enabled = true;
+  lRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  lRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  lRenderer.toneMappingExposure = 1.1;
+  lRenderer.outputEncoding = THREE.sRGBEncoding;
+
+  const lScene = new THREE.Scene();
+  lScene.background = new THREE.Color(0x0d0804);
+  lScene.fog = new THREE.FogExp2(0x6b3408, 0.016);
+
+  const lCamera = new THREE.PerspectiveCamera(52, W/H, 0.1, 300);
+  lCamera.position.set(0, 5, 24);
+  lCamera.lookAt(0, 2, 0);
+
+  // SKY
+  const skyGeo = new THREE.SphereGeometry(200, 32, 16);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    vertexShader: `varying vec3 vPos; void main(){ vPos=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `
+      varying vec3 vPos;
+      void main(){
+        float t = normalize(vPos).y * 0.5 + 0.5;
+        vec3 top=vec3(0.06,0.04,0.16); vec3 mid=vec3(0.48,0.18,0.04); vec3 hor=vec3(0.82,0.42,0.06);
+        vec3 col=mix(hor,mid,smoothstep(0.0,0.38,t)); col=mix(col,top,smoothstep(0.32,0.85,t));
+        float sun=pow(max(0.,1.-length(normalize(vPos)-normalize(vec3(0.55,0.28,-1.)))*3.2),5.);
+        col+=vec3(1.,0.88,0.45)*sun*1.1;
+        gl_FragColor=vec4(col,1.);
+      }`
+  });
+  lScene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  // SUELO
+  const gGeo = new THREE.PlaneGeometry(80, 40, 60, 30);
+  const gPos = gGeo.attributes.position;
+  for (let i=0; i<gPos.count; i++) gPos.setY(i, gPos.getY(i)+(Math.random()-0.5)*0.04);
+  gGeo.computeVertexNormals();
+  const ground = new THREE.Mesh(gGeo, new THREE.MeshStandardMaterial({ color:0x1e1508, roughness:0.97 }));
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.05; ground.receiveShadow = true;
+  lScene.add(ground);
+
+  // LUZ
+  const sun = new THREE.DirectionalLight(0xff8c2a, 3.2);
+  sun.position.set(18, 22, -8); sun.castShadow = true;
+  sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048;
+  sun.shadow.camera.left=-30; sun.shadow.camera.right=30;
+  sun.shadow.camera.top=20; sun.shadow.camera.bottom=-10;
+  sun.shadow.bias=-0.001;
+  lScene.add(sun);
+  lScene.add(new THREE.AmbientLight(0x7a4518, 1.4));
+  lScene.add(new THREE.HemisphereLight(0xc87020, 0x0a0600, 0.7));
+  const lampLight = new THREE.PointLight(0xffcc44, 4, 12, 2);
+  lampLight.position.set(4, 4, 2);
+  lScene.add(lampLight);
+
+  // PARTÍCULAS
+  const pCv = document.getElementById('lobby-particles');
+  pCv.width = W; pCv.height = H;
+  const pCx = pCv.getContext('2d');
+  const parts = Array.from({length:55}, ()=>({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.4+0.4, vy:Math.random()*0.25+0.08,
+    vx:(Math.random()-0.5)*0.2, op:Math.random()*0.45+0.1, phase:Math.random()*Math.PI*2
+  }));
+  function drawParticles(t) {
+    pCx.clearRect(0,0,W,H);
+    for (const p of parts) {
+      const fl = 0.7+0.3*Math.sin(t*2+p.phase);
+      pCx.beginPath(); pCx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      pCx.fillStyle=`rgba(201,168,76,${p.op*fl})`; pCx.fill();
+      p.y-=p.vy; p.x+=p.vx;
+      if(p.y<-5){p.y=H+5; p.x=Math.random()*W;}
+      if(p.x<0) p.x=W; if(p.x>W) p.x=0;
+    }
+  }
+
+  let lMixer = null;
+  const lClock = new THREE.Clock();
+  let lTime = 0;
+
+  function startLobbyLoop() {
+    if (lobbyLoopRunning) return;
+    lobbyLoopRunning = true;
+    function loop() {
+      requestAnimationFrame(loop);
+      if (currentView !== 'lobby') return;
+      const delta = lClock.getDelta();
+      lTime += delta;
+      if (lMixer) lMixer.update(delta);
+      lampLight.intensity = 3.5 + Math.sin(lTime*3.7)*0.5;
+      lCamera.position.x = Math.sin(lTime*0.18)*0.4;
+      lCamera.position.y = 5 + Math.sin(lTime*0.13)*0.15;
+      lCamera.lookAt(Math.sin(lTime*0.09)*0.3, 2.5, 0);
+      lRenderer.render(lScene, lCamera);
+      drawParticles(lTime);
+    }
+    loop();
+  }
+
+  // Procesar un GLB ya leído en ArrayBuffer
+  function loadGLB(arrayBuffer, onDone, onError) {
+    setLoadStatus('Procesando geometría...', 70);
+    const dracoLoader = new THREE.DRACOLoader();
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+    const loader = new THREE.GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+    loader.parse(arrayBuffer, '', function(gltf) {
+      setLoadStatus('Colocando modelo...', 90);
+      const old = lScene.getObjectByName('__casa_model__');
+      if (old) lScene.remove(old);
+      const model = gltf.scene;
+      model.name = '__casa_model__';
+      const box = new THREE.Box3().setFromObject(model);
+      const size = new THREE.Vector3(), center = new THREE.Vector3();
+      box.getSize(size); box.getCenter(center);
+      const scale = 9 / size.y;
+      model.scale.setScalar(scale);
+      model.position.x = -center.x * scale;
+      model.position.y = -box.min.y * scale;
+      model.position.z = -center.z * scale - 3;
+      model.traverse(n => { if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; } });
+      lScene.add(model);
+      if (gltf.animations && gltf.animations.length > 0) {
+        lMixer = new THREE.AnimationMixer(model);
+        gltf.animations.forEach(clip => lMixer.clipAction(clip).play());
+      }
+      setLoadStatus('¡Listo!', 100);
+      startLobbyLoop();
+      if (onDone) onDone();
+    }, function(err) {
+      console.error('Error al parsear el GLB:', err);
+      if (onError) onError(err);
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    const nw=window.innerWidth, nh=window.innerHeight;
+    lCamera.aspect=nw/nh; lCamera.updateProjectionMatrix();
+    lRenderer.setSize(nw,nh);
+    pCv.width=nw; pCv.height=nh;
+  });
+
+  return { loadGLB, startLobbyLoop };
+})();
+
+/* ════════════════════════════════════════════════════════════
+   CARGA AUTOMÁTICA DEL MODELO AL INICIAR (sin botón de subida)
+════════════════════════════════════════════════════════════ */
+const loadBar    = document.getElementById('load-bar');
+const loadStatus = document.getElementById('load-status');
+const loadError  = document.getElementById('load-error');
+const loadRetry  = document.getElementById('load-retry');
+const loadingEl  = document.getElementById('loading');
+
+function setLoadStatus(text, pct) {
+  if (loadStatus) loadStatus.textContent = text;
+  if (typeof pct === 'number' && loadBar) loadBar.style.width = pct + '%';
+}
+
+function showLoadError(msg) {
+  setLoadStatus('No se pudo cargar el modelo', 0);
+  if (loadError) { loadError.style.display = 'block'; loadError.textContent = msg; }
+  if (loadRetry) loadRetry.style.display = 'inline-block';
+}
+
+function autoLoadModel() {
+  if (loadError) loadError.style.display = 'none';
+  if (loadRetry) loadRetry.style.display = 'none';
+  setLoadStatus('Buscando ' + MODEL_PATH + '...', 10);
+
+  fetch(MODEL_PATH)
+    .then(res => {
+      if (!res.ok) throw new Error('Archivo no encontrado (HTTP ' + res.status + ')');
+      const total = +res.headers.get('Content-Length') || 0;
+      if (!res.body || !total) {
+        setLoadStatus('Descargando modelo...', 40);
+        return res.arrayBuffer();
+      }
+      let loaded = 0;
+      const reader = res.body.getReader();
+      const chunks = [];
+      return new Promise((resolve, reject) => {
+        function pump() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              const buf = new Uint8Array(loaded);
+              let offset = 0;
+              for (const c of chunks) { buf.set(c, offset); offset += c.length; }
+              resolve(buf.buffer);
+              return;
+            }
+            chunks.push(value);
+            loaded += value.length;
+            setLoadStatus('Descargando modelo...', 10 + Math.round((loaded/total)*50));
+            pump();
+          }).catch(reject);
+        }
+        pump();
+      });
+    })
+    .then(buffer => {
+      lobbyAPI.loadGLB(buffer, () => {
+        setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
+      }, () => {
+        showLoadError('El archivo se descargó pero no se pudo procesar como modelo 3D válido (.glb/.gltf).');
+      });
+    })
+    .catch(err => {
+      console.error('Error cargando el modelo automáticamente:', err);
+      let msg = 'No se encontró "' + MODEL_PATH + '". Verifica que el archivo exista en esa ruta, junto a este HTML.';
+      if (location.protocol === 'file:') {
+        msg += ' Estás abriendo la página con doble clic (file://): la carga automática de modelos 3D requiere un servidor local. Ejecuta por ejemplo "python3 -m http.server" en esta carpeta y abre http://localhost:8000 en tu navegador.';
+      }
+      showLoadError(msg);
+    });
+}
+
+if (loadRetry) loadRetry.addEventListener('click', autoLoadModel);
+
+// Iniciar la carga automática al cargar la página
+autoLoadModel();
+
+/* ════════════════════════════════════════════════════════════
+   BOTONES ENTRAR / SALIR
+════════════════════════════════════════════════════════════ */
+document.getElementById('explore-btn').addEventListener('click', switchToMuseo);
+document.getElementById('nav-recorrido').addEventListener('click', switchToMuseo);
+document.getElementById('btn-volver').addEventListener('click', switchToLobby);
+
+/* ════════════════════════════════════════════════════════════
+   MUSEO INTERIOR — THREE.JS (lazy init)
+════════════════════════════════════════════════════════════ */
+const rooms = {
+  hall:        { name:'Gran Hall de Entrada',    tag:'Planta Baja · Acceso',          desc:'El imponente hall de entrada fue diseñado para recibir a diplomáticos y élites. Sus columnas de mármol de Carrara y pisos de parqué importado reflejan el esplendor europeo.', details:[{label:'Estilo',val:'Ecléctico europeo, c.1900'},{label:'Materiales',val:'Mármol de Carrara, caoba'},{label:'Función',val:'Recepción y protocolo'}], icon:'🚪', color:'#C9A84C' },
+  salon:       { name:'Salón de Recepciones',    tag:'Planta Baja · Sala Social',     desc:'Salón donde Patiño recibía a sus invitados. Decorado con tapices parisinos y muebles Luis XVI, fue escenario de reuniones que moldearon la política boliviana del siglo XX.', details:[{label:'Dimensiones',val:'18 × 12 m'},{label:'Decoración',val:'Tapices Manufacture de Sèvres'},{label:'Época',val:'1910–1940'}], icon:'🪑', color:'#6B1E2E' },
+  comedor:     { name:'Comedor de Gala',         tag:'Planta Baja · Banquetes',       desc:'La mesa podía sentar 24 comensales. Vajilla de porcelana Limoges, cubiertos de plata maciza y pinturas al óleo de artistas europeos.', details:[{label:'Capacidad',val:'24 personas'},{label:'Vajilla',val:'Porcelana Limoges, Francia'},{label:'Luminaria',val:'Candelabros de cristal de Bohemia'}], icon:'🍽', color:'#6B1E2E' },
+  galeria_baja:{ name:'Galería de Retratos',     tag:'Planta Baja · Arte e Historia', desc:'Corredor con retratos al óleo de Patiño y su familia. Las obras narran visualmente la ascensión de un minero cholo a magnate global del estaño.', details:[{label:'Obras',val:'12 retratos al óleo, ss. XIX–XX'},{label:'Autores',val:'Artistas parisinos y madrileños'},{label:'Periodo',val:'1895–1945'}], icon:'🖼', color:'#4A7C4F' },
+  estudio:     { name:'Estudio Privado',         tag:'Segundo Nivel · Despacho',      desc:'Desde este despacho Patiño coordinaba sus operaciones mineras en tres continentes. Réplica del escritorio original con documentos facsimilares de sus contratos.', details:[{label:'Escritorio',val:'Nogal con incrustaciones, estilo inglés'},{label:'Archivos',val:'Documentos Patiño Mines & Enterprises'},{label:'Vista',val:'Hacia el cerro y las minas de Llallagua'}], icon:'📜', color:'#C9A84C' },
+  alcoba:      { name:'Alcoba Principal',        tag:'Segundo Nivel · Suite',         desc:'Habitación con cama de dosel importada de Bélgica y cortinajes de terciopelo rojo. El baño anexo con bañera de porcelana era un lujo extraordinario para Bolivia.', details:[{label:'Cama',val:'Dosel belga, madera de haya'},{label:'Baño',val:'Porcelana y herrajes dorados'},{label:'Alfombras',val:'Persas, vía Buenos Aires'}], icon:'🛏', color:'#C9A84C' },
+  sala_musica: { name:'Sala de Música',          tag:'Segundo Nivel · Arte y Cultura',desc:'Patiño era mecenas de las artes. Esta sala albergaba un piano Bösendorfer y fue escenario de veladas musicales con artistas traídos desde Europa.', details:[{label:'Piano',val:'Bösendorfer Imperial, Viena 1912'},{label:'Capacidad',val:'Recitales de hasta 30 personas'},{label:'Acústica',val:'Paneles de madera tallada'}], icon:'🎹', color:'#4A7C4F' },
+  mirador:     { name:'Mirador y Terraza',       tag:'Segundo Nivel · Panorámica',    desc:'Desde la terraza, la familia contemplaba el cerro Llallagua. Balaustrada de piedra calcárea y macetones de cerámica española.', details:[{label:'Balaustrada',val:'Piedra calcárea labrada'},{label:'Vista',val:'Cerro Llallagua y minas de estaño'},{label:'Decoración',val:'Macetones sevillanos, s. XIX'}], icon:'🏔', color:'#4A7C4F' },
+};
+
+let museumInited = false;
+let mRenderer, mScene, mCamera, mMarkers = [], mKeys = {};
+let mCamFloor=0, mCamYaw=0, mCamX=0, mCamZ=8, mAnimT=0;
+const FLOOR_Y=[1.65,6.15], SPEED=0.18;
+
+function initMuseumIfNeeded() {
+  if (museumInited) return;
+  museumInited = true;
+
+  const mCanvas = document.getElementById('museum-canvas');
+  mRenderer = new THREE.WebGLRenderer({ canvas: mCanvas, antialias: true });
+  mRenderer.setPixelRatio(window.devicePixelRatio);
+  mRenderer.shadowMap.enabled = true;
+  mRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  mRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  mRenderer.toneMappingExposure = 0.85;
+  mRenderer.setSize(window.innerWidth, window.innerHeight);
+
+  mScene = new THREE.Scene();
+  mScene.background = new THREE.Color(0x0a0806);
+  mScene.fog = new THREE.Fog(0x0a0806, 30, 80);
+
+  mCamera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 200);
+  mCamera.position.set(0, 1.65, 8);
+  mCamera.lookAt(0, 1.65, 0);
+
+  window.addEventListener('resize', () => {
+    mCamera.aspect = window.innerWidth/window.innerHeight;
+    mCamera.updateProjectionMatrix();
+    mRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Texturas procedurales
+  function mkMarble(w=256,h=256){ const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.fillStyle='#ddd8c4';c.fillRect(0,0,w,h);for(let i=0;i<80;i++){c.beginPath();c.strokeStyle=`rgba(180,170,140,${Math.random()*0.3+0.1})`;c.lineWidth=Math.random()*2+0.5;const x=Math.random()*w,y=Math.random()*h;c.moveTo(x,y);c.bezierCurveTo(x+Math.random()*60-30,y+Math.random()*60-30,x+Math.random()*80-40,y+Math.random()*80-40,x+Math.random()*100-50,y+Math.random()*100-50);c.stroke();}return new THREE.CanvasTexture(cv);}
+  function mkParquet(w=512,h=512){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');const tW=64,tH=32,co=['#6b3a1f','#8b4c28','#5a2f18'];for(let r=0;r<h/tH+1;r++){for(let cc2=0;cc2<w/tW+1;cc2++){const off=(r%2)*tW/2;const x=cc2*tW-off,y=r*tH;c.fillStyle=co[(r+cc2)%3];c.fillRect(x,y,tW-1,tH-1);}}return new THREE.CanvasTexture(cv);}
+  function mkWall(w=256,h=256){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.fillStyle='#c5a97a';c.fillRect(0,0,w,h);const s=32;for(let y=0;y<h;y+=s){for(let x=0;x<w;x+=s){c.beginPath();c.strokeStyle='rgba(150,100,40,0.25)';c.lineWidth=0.8;c.arc(x+s/2,y+s/2,10,0,Math.PI*2);c.stroke();}}return new THREE.CanvasTexture(cv);}
+  function mkCeil(w=256,h=256){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.fillStyle='#f0e8d0';c.fillRect(0,0,w,h);return new THREE.CanvasTexture(cv);}
+
+  const marbleTex=mkMarble(), parquetTex=mkParquet(), wallTex=mkWall(), ceilTex=mkCeil();
+
+  function makeColumn(x,y,z,h=3.5){ const g=new THREE.Group();const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.18,h,12),new THREE.MeshStandardMaterial({map:mkMarble(),roughness:0.3,metalness:0.05}));shaft.position.set(0,h/2,0);shaft.castShadow=true;const base=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.25,0.45),new THREE.MeshStandardMaterial({color:0xd4c9a8,roughness:0.4}));base.position.y=0.125;const cap=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.2,0.5),new THREE.MeshStandardMaterial({color:0xd4c9a8,roughness:0.4}));cap.position.y=h+0.1;g.add(shaft,base,cap);g.position.set(x,y,z);return g;}
+
+  function makePainting(x,y,z,ry=0,color=0x8b4513){ const g=new THREE.Group();const frame=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.2,0.06),new THREE.MeshStandardMaterial({color:0xc9a84c,roughness:0.4,metalness:0.6}));const cv2=new THREE.Mesh(new THREE.BoxGeometry(1.35,0.95,0.05),new THREE.MeshStandardMaterial({color,roughness:0.9}));cv2.position.z=0.02;g.add(frame,cv2);g.position.set(x,y,z);g.rotation.y=ry;g.userData.interactive=true;return g;}
+
+  function makeMarker(x,y,z,key){ const g=new THREE.Group();const sp=new THREE.Mesh(new THREE.SphereGeometry(0.22,16,16),new THREE.MeshBasicMaterial({color:0xC9A84C,transparent:true,opacity:0.85}));const inn=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));g.add(sp,inn);g.position.set(x,y,z);g.userData.isMarker=true;g.userData.roomKey=key;g.userData.label=rooms[key].name;return g;}
+
+  function buildFloor(yO){ const fH=4.5;
+    const fl=new THREE.Mesh(new THREE.PlaneGeometry(36,28),new THREE.MeshStandardMaterial({map:parquetTex,roughness:0.6}));
+    fl.rotation.x=-Math.PI/2;fl.position.set(0,yO,-4);fl.receiveShadow=true;mScene.add(fl);
+    const cl=new THREE.Mesh(new THREE.PlaneGeometry(36,28),new THREE.MeshStandardMaterial({map:ceilTex,roughness:0.8}));
+    cl.rotation.x=Math.PI/2;cl.position.set(0,yO+fH,-4);mScene.add(cl);
+    const wm=new THREE.MeshStandardMaterial({map:wallTex,roughness:0.85});
+    const wb=new THREE.Mesh(new THREE.PlaneGeometry(36,fH),wm);wb.position.set(0,yO+fH/2,-18);mScene.add(wb);
+    const wf=new THREE.Mesh(new THREE.PlaneGeometry(36,fH),wm.clone());wf.rotation.y=Math.PI;wf.position.set(0,yO+fH/2,10);mScene.add(wf);
+    const wl=new THREE.Mesh(new THREE.PlaneGeometry(28,fH),wm.clone());wl.rotation.y=Math.PI/2;wl.position.set(-18,yO+fH/2,-4);mScene.add(wl);
+    const wr=new THREE.Mesh(new THREE.PlaneGeometry(28,fH),wm.clone());wr.rotation.y=-Math.PI/2;wr.position.set(18,yO+fH/2,-4);mScene.add(wr);
+    [[-5,-2],[5,-2],[-5,-8],[5,-8],[-10,-5],[10,-5],[-10,-12],[10,-12]].forEach(([cx,cz])=>mScene.add(makeColumn(cx,yO,cz,fH-0.6)));
+    if(yO===0){ mScene.add(makePainting(-12,yO+2.2,-17.9,0,0x4a2c0a));mScene.add(makePainting(-6,yO+2.2,-17.9,0,0x1a3a1a));mScene.add(makePainting(0,yO+2.2,-17.9,0,0x2a1a2a));mScene.add(makePainting(6,yO+2.2,-17.9,0,0x0a2030));mScene.add(makePainting(12,yO+2.2,-17.9,0,0x301a0a));
+    } else { mScene.add(makePainting(-12,yO+2.2,-17.9,0,0x0a1a30));mScene.add(makePainting(-5,yO+2.2,-17.9,0,0x201010));mScene.add(makePainting(5,yO+2.2,-17.9,0,0x102010));mScene.add(makePainting(12,yO+2.2,-17.9,0,0x201020)); }
+  }
+
+  buildFloor(0); buildFloor(4.5);
+
+  // Escalera
+  const mat=new THREE.MeshStandardMaterial({map:mkMarble(),roughness:0.4});
+  for(let i=0;i<14;i++){ const s=new THREE.Mesh(new THREE.BoxGeometry(3,0.18,0.6),mat);s.position.set(14,0.09+i*0.325,8-i*0.6);s.castShadow=true;mScene.add(s); }
+  const landing=new THREE.Mesh(new THREE.BoxGeometry(3,0.18,2),mat);landing.position.set(14,4.5,0);mScene.add(landing);
+
+  // Marcadores
+  const markerData=[
+    {key:'hall',x:0,y:1.2,z:4},{key:'salon',x:-10,y:1.2,z:-6},{key:'comedor',x:10,y:1.2,z:-6},{key:'galeria_baja',x:0,y:1.2,z:-14},
+    {key:'estudio',x:0,y:5.7,z:4},{key:'alcoba',x:-10,y:5.7,z:-6},{key:'sala_musica',x:10,y:5.7,z:-6},{key:'mirador',x:0,y:5.7,z:-14},
+  ];
+  markerData.forEach(m=>{ const mk=makeMarker(m.x,m.y,m.z,m.key); mScene.add(mk); mMarkers.push(mk); });
+
+  // Luces
+  mScene.add(new THREE.AmbientLight(0x2a1a0a,0.6));
+  function addChand(x,y,z,col=0xfff5c0){ const p=new THREE.PointLight(col,2.5,22,2);p.position.set(x,y,z);p.castShadow=true;mScene.add(p);const b=new THREE.Mesh(new THREE.SphereGeometry(0.2,8,8),new THREE.MeshBasicMaterial({color:col}));b.position.set(x,y,z);mScene.add(b); }
+  addChand(0,4.2,-4);addChand(-8,4.2,-6);addChand(8,4.2,-6);addChand(0,4.2,-13);
+  addChand(0,8.5,-4,0xffeebb);addChand(-8,8.5,-6,0xffeebb);addChand(8,8.5,-6,0xffeebb);addChand(0,8.5,-13,0xffeebb);
+  const dl=new THREE.DirectionalLight(0xfff5dc,0.4);dl.position.set(5,10,5);dl.castShadow=true;mScene.add(dl);
+
+  // Raycaster
+  const ray=new THREE.Raycaster();
+  const mouse=new THREE.Vector2();
+  const mCv=document.getElementById('museum-canvas');
+
+  function checkHit(e){ mouse.x=(e.clientX/window.innerWidth)*2-1; mouse.y=-(e.clientY/window.innerHeight)*2+1; ray.setFromCamera(mouse,mCamera); return ray.intersectObjects(mScene.children,true); }
+
+  mCv.addEventListener('mousemove',e=>{
+    if(currentView!=='museo') return;
+    const hits=checkHit(e); const tt=document.getElementById('tooltip'); let hit=null;
+    for(const i of hits){ const p=i.object.parent||i.object; if(p.userData&&(p.userData.isMarker||p.userData.interactive)){hit=p;break;} if(i.object.userData&&i.object.userData.isMarker){hit=i.object;break;} }
+    if(hit){ tt.style.display='block';tt.style.left=(e.clientX+16)+'px';tt.style.top=(e.clientY-30)+'px';document.getElementById('tt-name').textContent=hit.userData.label||'';document.body.style.cursor='pointer';}
+    else{tt.style.display='none';document.body.style.cursor='default';}
+  });
+  mCv.addEventListener('click',e=>{
+    if(currentView!=='museo') return;
+    const hits=checkHit(e);
+    for(const i of hits){ const p=i.object.parent||i.object; if(p.userData&&p.userData.isMarker&&p.userData.roomKey){openPanel(p.userData.roomKey);return;} if(p.userData&&p.userData.interactive){openPanel('galeria_baja');return;} }
+  });
+
+  // Mouse drag
+  let isDrag=false,lastX=0;
+  mCv.addEventListener('mousedown',e=>{isDrag=true;lastX=e.clientX;});
+  window.addEventListener('mouseup',()=>isDrag=false);
+  window.addEventListener('mousemove',e=>{ if(isDrag&&currentView==='museo') mCamYaw-=(e.clientX-lastX)*0.003; lastX=e.clientX; });
+
+  // Teclado
+  window.addEventListener('keydown',e=>{ if(currentView==='museo') mKeys[e.key]=true; });
+  window.addEventListener('keyup',e=>{ mKeys[e.key]=false; });
+
+  // Botones táctiles
+  function bindBtn(id,key){ const el=document.getElementById(id); el.addEventListener('mousedown',()=>mKeys[key]=true); el.addEventListener('mouseup',()=>mKeys[key]=false); el.addEventListener('touchstart',e=>{e.preventDefault();mKeys[key]=true;}); el.addEventListener('touchend',e=>{e.preventDefault();mKeys[key]=false;}); }
+  bindBtn('btn-forward','ArrowUp'); bindBtn('btn-back','ArrowDown'); bindBtn('btn-left','ArrowLeft'); bindBtn('btn-right','ArrowRight');
+
+  // Loop museo
+  museumLoopRunning = true;
+  function mLoop(){
+    requestAnimationFrame(mLoop);
+    if(currentView!=='museo') return;
+    mAnimT+=0.016;
+    mMarkers.forEach((mk,i)=>{ mk.scale.setScalar(0.95+0.08*Math.sin(mAnimT*2+i)); mk.children[0].material.opacity=0.55+0.3*Math.sin(mAnimT*1.5+i); });
+    if(mKeys['ArrowUp']||mKeys['w']||mKeys['W']){ mCamX-=Math.sin(mCamYaw)*SPEED; mCamZ-=Math.cos(mCamYaw)*SPEED; }
+    if(mKeys['ArrowDown']||mKeys['s']||mKeys['S']){ mCamX+=Math.sin(mCamYaw)*SPEED; mCamZ+=Math.cos(mCamYaw)*SPEED; }
+    if(mKeys['ArrowLeft']||mKeys['a']||mKeys['A']) mCamYaw+=0.025;
+    if(mKeys['ArrowRight']||mKeys['d']||mKeys['D']) mCamYaw-=0.025;
+    mCamX=Math.max(-16,Math.min(16,mCamX)); mCamZ=Math.max(-17,Math.min(9,mCamZ));
+    mCamera.position.set(mCamX,FLOOR_Y[mCamFloor],mCamZ);
+    mCamera.rotation.y=mCamYaw;
+    mRenderer.render(mScene,mCamera);
+  }
+  mLoop();
+}
+
+/* ════════════════════════════════════════════════════════════
+   FUNCIONES DE UI MUSEO
+════════════════════════════════════════════════════════════ */
+function openPanel(key){
+  const r=rooms[key]; if(!r) return;
+  document.getElementById('panel-tag').textContent=r.tag;
+  document.getElementById('panel-title').textContent=r.name;
+  document.getElementById('panel-desc').textContent=r.desc;
+  const w=document.getElementById('panel-img-wrap');
+  w.innerHTML=`<span class="icon">${r.icon}</span><span class="img-label">${r.name}</span>`;
+  const d=document.getElementById('panel-details');
+  d.innerHTML='';
+  (r.details||[]).forEach(x=>{ d.innerHTML+=`<div class="detail-item"><span class="detail-label">${x.label}</span><span class="detail-val">${x.val}</span></div>`; });
+  document.getElementById('info-panel').classList.add('open');
+}
+
+function closePanel(){ document.getElementById('info-panel').classList.remove('open'); }
+
+function goToFloor(f){
+  mCamFloor=f; mCamZ=8; mCamX=0; mCamYaw=0;
+  document.querySelectorAll('.floor-btn').forEach((b,i)=>b.classList.toggle('active',i===f));
+}
+/* ═══════════════════════════════
+   HISTORIA PATIÑO
+═══════════════════════════════ */
+
+const btnHistory = document.getElementById('btn-history');
+const historyModal = document.getElementById('history-modal');
+const closeHistory = document.getElementById('close-history');
+
+if(btnHistory){
+
+  btnHistory.addEventListener('click', () => {
+    historyModal.classList.add('show');
+  });
+
+}
+
+if(closeHistory){
+
+  closeHistory.addEventListener('click', () => {
+    historyModal.classList.remove('show');
+  });
+
+}
+
+historyModal?.addEventListener('click', (e) => {
+
+  if(e.target === historyModal){
+    historyModal.classList.remove('show');
+  }
+
+});
+
+document.addEventListener('keydown', (e)=>{
+
+  if(e.key === 'Escape'){
+    historyModal.classList.remove('show');
+  }
+
+});
+</script>
+</body>
+</html>
